@@ -1,0 +1,1 @@
+Приложение, написанное с применением опций ddd-light, business-events, value-objects и optimistic-locking из скилла ddd. Другие опции использовать в этой реализации запрещено.
