@@ -1,149 +1,131 @@
 package integration
 
 import (
-    "context"
-    "os"
-    "strconv"
-    "strings"
-    "testing"
-    "time"
+	"context"
+	"os"
+	"testing"
+	"time"
 
-    "architecture-bricks/app"
-    "architecture-bricks/contract"
+	"architecture-bricks/app"
+	"architecture-bricks/contract"
 
-    "github.com/jackc/pgx/v5"
-    "github.com/stretchr/testify/require"
+	"github.com/jackc/pgx/v5"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-    TestProductName    = "Coffee"
-    TestProductNameCat = "Кот"
-    TestProductNameDog = "Собака"
+	TestProductName    = "Coffee"
+	TestProductNameCat = "Кот"
+	TestProductNameDog = "Собака"
 )
 
 var TestApplicationVariants = []string{
-    app.VariantV1ScenarioOfTransaction,
-    app.VariantV2Repository,
-    app.VariantV3DomainDrivenDesignLight,
-    app.VariantV4DomainDrivenDesignLightWithEvents,
-    app.VariantV5ValueObjects,
-    app.VariantV6OptimisticLocking,
+	app.VariantV1ScenarioOfTransaction,
+	app.VariantV2Repository,
+	app.VariantV3DomainDrivenDesignLight,
+	app.VariantV4DomainDrivenDesignLightWithEvents,
+	app.VariantV5ValueObjects,
+	app.VariantV6OptimisticLocking,
 }
 
 func TestApplicationVariantList(t testing.TB) []string {
-    t.Helper()
+	t.Helper()
 
-    variant := os.Getenv("TEST_APP_VARIANT")
-    if variant == "" {
-        return TestApplicationVariants
-    }
+	variant := os.Getenv("TEST_APP_VARIANT")
+	if variant == "" {
+		return TestApplicationVariants
+	}
 
-    for _, testVariant := range TestApplicationVariants {
-        if testVariant == variant {
-            return []string{variant}
-        }
-    }
+	for _, testVariant := range TestApplicationVariants {
+		if testVariant == variant {
+			return []string{variant}
+		}
+	}
 
-    require.Failf(t, "unknown test application variant", "TEST_APP_VARIANT=%s", variant)
+	require.Failf(t, "unknown test application variant", "TEST_APP_VARIANT=%s", variant)
 
-    return nil
+	return nil
 }
 
 func NewTestApplication(t testing.TB, ctx context.Context, variant string) contract.Application {
-    t.Helper()
+	t.Helper()
 
-    application, err := app.NewApplicationByVariant(ctx, variant)
-    require.NoError(t, err)
+	application, err := app.NewApplicationByVariant(ctx, variant)
+	require.NoError(t, err)
 
-    return application
+	return application
 }
 
 func TestDatabaseURL(t testing.TB) string {
-    t.Helper()
+	t.Helper()
 
-    databaseURL := os.Getenv("DATABASE_URL")
-    if databaseURL == "" {
-        t.Skip("DATABASE_URL is required for integration tests")
-    }
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("DATABASE_URL is required for integration tests")
+	}
 
-    return databaseURL
+	return databaseURL
 }
 
 func CleanupProduct(t testing.TB, ctx context.Context, databaseURL string, productID string) {
-    t.Helper()
+	t.Helper()
 
-    CleanupProducts(t, ctx, databaseURL, []string{productID})
+	CleanupProducts(t, ctx, databaseURL, []string{productID})
 }
 
 func CleanupProducts(t testing.TB, ctx context.Context, databaseURL string, productIDList []string) {
-    t.Helper()
+	t.Helper()
 
-    if len(productIDList) == 0 {
-        return
-    }
+	if len(productIDList) == 0 {
+		return
+	}
 
-    conn, err := pgx.Connect(ctx, databaseURL)
-    require.NoError(t, err)
-    defer func() {
-        require.NoError(t, conn.Close(ctx))
-    }()
+	conn, err := pgx.Connect(ctx, databaseURL)
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, conn.Close(ctx))
+	}()
 
-    _, err = conn.Exec(ctx, `DELETE FROM event WHERE entry_id = ANY($1)`, productIDList)
-    require.NoError(t, err)
+	_, err = conn.Exec(ctx, `DELETE FROM event WHERE entry_id = ANY($1)`, productIDList)
+	require.NoError(t, err)
 
-    _, err = conn.Exec(ctx, `DELETE FROM product WHERE id = ANY($1)`, productIDList)
-    require.NoError(t, err)
+	_, err = conn.Exec(ctx, `DELETE FROM product WHERE id = ANY($1)`, productIDList)
+	require.NoError(t, err)
 }
 
 func WaitDB(t testing.TB, ctx context.Context, databaseURL string) {
-    t.Helper()
+	t.Helper()
 
-    waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-    defer cancel()
+	waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
-    var err error
-    for {
-        var conn *pgx.Conn
-        conn, err = pgx.Connect(waitCtx, databaseURL)
-        if err == nil {
-            err = conn.Ping(waitCtx)
-            closeErr := conn.Close(waitCtx)
-            if err == nil && closeErr == nil {
-                return
-            }
+	var err error
+	for {
+		var conn *pgx.Conn
+		conn, err = pgx.Connect(waitCtx, databaseURL)
+		if err == nil {
+			err = conn.Ping(waitCtx)
+			closeErr := conn.Close(waitCtx)
+			if err == nil && closeErr == nil {
+				return
+			}
 
-            if err == nil {
-                err = closeErr
-            }
-        }
+			if err == nil {
+				err = closeErr
+			}
+		}
 
-        select {
-        case <-waitCtx.Done():
-            require.Failf(t, "wait db", "last error: %v", err)
-            return
-        case <-time.After(500 * time.Millisecond):
-        }
-    }
+		select {
+		case <-waitCtx.Done():
+			require.Failf(t, "wait db", "last error: %v", err)
+			return
+		case <-time.After(500 * time.Millisecond):
+		}
+	}
 }
 
-// SupportsConflict возвращает true для вариантов, где ожидается
-// ErrProductAlreadyChanged при конкурентном обновлении.
-// Номер версии извлекается из префикса v<number>_ названия варианта.
+// SupportsConflict возвращает true для всех вариантов приложения,
+// потому что optimistic locking поддерживается каждой реализацией.
 func SupportsConflict(variant string) bool {
-    if !strings.HasPrefix(variant, "v") {
-        return false
-    }
-
-    underscoreIdx := strings.Index(variant, "_")
-    if underscoreIdx < 0 {
-        return false
-    }
-
-    versionStr := variant[1:underscoreIdx]
-    version, err := strconv.Atoi(versionStr)
-    if err != nil {
-        return false
-    }
-
-    return version > 5
+	return true
 }

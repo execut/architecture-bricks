@@ -7,152 +7,161 @@ var _ ddd.Entity = (*Product)(nil)
 type ProductStatus string
 
 const (
-    ProductStatusPending  ProductStatus = "pending"
-    ProductStatusApproved ProductStatus = "approved"
-    ProductStatusRejected ProductStatus = "rejected"
+	ProductStatusPending  ProductStatus = "pending"
+	ProductStatusApproved ProductStatus = "approved"
+	ProductStatusRejected ProductStatus = "rejected"
 )
 
 type ProductApproveReason string
 
 const (
-    ProductApproveReasonModerator ProductApproveReason = "Moderator"
-    ProductApproveReasonAuto      ProductApproveReason = "Auto"
+	ProductApproveReasonModerator ProductApproveReason = "Moderator"
+	ProductApproveReasonAuto      ProductApproveReason = "Auto"
 )
 
 type ProductRejectionReason string
 
 const (
-    ProductRejectionReasonModerator ProductRejectionReason = "Moderator"
+	ProductRejectionReasonModerator ProductRejectionReason = "Moderator"
 )
 
 type Product struct {
-    id              string
-    userID          string
-    name            string
-    status          ProductStatus
-    approveReason   ProductApproveReason
-    rejectionReason ProductRejectionReason
-    events          []ddd.Event
+	id              string
+	userID          string
+	name            string
+	status          ProductStatus
+	approveReason   ProductApproveReason
+	rejectionReason ProductRejectionReason
+	version         int
+	events          []ddd.Event
 }
 
 func NewProduct(id string) *Product {
-    return &Product{id: id}
+	return &Product{id: id, version: 1}
+}
+
+func (p *Product) Version() int {
+	return p.version
+}
+
+func (p *Product) SetVersion(version int) {
+	p.version = version
 }
 
 func (p *Product) Create(name string, userID string) error {
-    if p.name != "" {
-        return ErrProductAlreadyExists
-    }
+	if p.name != "" {
+		return ErrProductAlreadyExists
+	}
 
-    if name == "" {
-        return ErrProductNameRequired
-    }
+	if name == "" {
+		return ErrProductNameRequired
+	}
 
-    p.AddAndApplyEvent(ProductCreated{UserID: userID, Name: name})
-    p.AutoApproveIfEligible()
+	p.AddAndApplyEvent(ProductCreated{UserID: userID, Name: name})
+	p.AutoApproveIfEligible()
 
-    return nil
+	return nil
 }
 
 func (p *Product) Rename(name string, userID string) error {
-    if p.name == name {
-        return ErrProductNameNotChanged
-    }
+	if p.name == name {
+		return ErrProductNameNotChanged
+	}
 
-    if name == "" {
-        return ErrProductNameRequired
-    }
+	if name == "" {
+		return ErrProductNameRequired
+	}
 
-    p.AddAndApplyEvent(ProductRenamed{UserID: userID, OldName: p.name, NewName: name})
-    p.AutoApproveIfEligible()
+	p.AddAndApplyEvent(ProductRenamed{UserID: userID, OldName: p.name, NewName: name})
+	p.AutoApproveIfEligible()
 
-    return nil
+	return nil
 }
 
 func (p *Product) Approve(moderatorID string) {
-    p.AddAndApplyEvent(ProductApproved{
-        ModeratorID:   moderatorID,
-        ApproveReason: ProductApproveReasonModerator,
-    })
+	p.AddAndApplyEvent(ProductApproved{
+		ModeratorID:   moderatorID,
+		ApproveReason: ProductApproveReasonModerator,
+	})
 }
 
 func (p *Product) Reject(moderatorID string) {
-    p.AddAndApplyEvent(ProductRejected{
-        ModeratorID:     moderatorID,
-        RejectionReason: ProductRejectionReasonModerator,
-    })
+	p.AddAndApplyEvent(ProductRejected{
+		ModeratorID:     moderatorID,
+		RejectionReason: ProductRejectionReasonModerator,
+	})
 }
 
 // AutoApproveIfEligible проверяет, подлежит ли продукт авто-одобрению,
 // и если да — генерирует событие ProductAutoApproved.
 // Возвращает true, если авто-одобрение было применено.
 func (p *Product) AutoApproveIfEligible() bool {
-    if p.name != "Кот" && p.name != "Собака" {
-        return false
-    }
+	if p.name != "Кот" && p.name != "Собака" {
+		return false
+	}
 
-    p.AddAndApplyEvent(ProductAutoApproved{
-        ApproveReason: ProductApproveReasonAuto,
-    })
+	p.AddAndApplyEvent(ProductAutoApproved{
+		ApproveReason: ProductApproveReasonAuto,
+	})
 
-    return true
+	return true
 }
 
 func (p *Product) EventList() []ddd.Event {
-    return p.events
+	return p.events
 }
 
 func (p *Product) AddAndApplyEvent(event ddd.Event) {
-    p.events = append(p.events, event)
+	p.events = append(p.events, event)
 
-    switch e := event.(type) {
-    case ProductCreated:
-        p.name = e.Name
-        p.userID = e.UserID
-        p.status = ProductStatusPending
-        p.approveReason = ""
-        p.rejectionReason = ""
-    case ProductRenamed:
-        p.name = e.NewName
-    case ProductApproved:
-        p.status = ProductStatusApproved
-        p.approveReason = e.ApproveReason
-        p.rejectionReason = ""
-    case ProductRejected:
-        p.status = ProductStatusRejected
-        p.rejectionReason = e.RejectionReason
-        p.approveReason = ""
-    case ProductAutoApproved:
-        p.status = ProductStatusApproved
-        p.approveReason = e.ApproveReason
-        p.rejectionReason = ""
-    }
+	switch e := event.(type) {
+	case ProductCreated:
+		p.name = e.Name
+		p.userID = e.UserID
+		p.status = ProductStatusPending
+		p.approveReason = ""
+		p.rejectionReason = ""
+	case ProductRenamed:
+		p.name = e.NewName
+	case ProductApproved:
+		p.status = ProductStatusApproved
+		p.approveReason = e.ApproveReason
+		p.rejectionReason = ""
+	case ProductRejected:
+		p.status = ProductStatusRejected
+		p.rejectionReason = e.RejectionReason
+		p.approveReason = ""
+	case ProductAutoApproved:
+		p.status = ProductStatusApproved
+		p.approveReason = e.ApproveReason
+		p.rejectionReason = ""
+	}
 }
 
 func (p *Product) CleanEventList() {
-    p.events = nil
+	p.events = nil
 }
 
 func (p *Product) ID() string {
-    return p.id
+	return p.id
 }
 
 func (p *Product) UserID() string {
-    return p.userID
+	return p.userID
 }
 
 func (p *Product) Name() string {
-    return p.name
+	return p.name
 }
 
 func (p *Product) Status() ProductStatus {
-    return p.status
+	return p.status
 }
 
 func (p *Product) ApproveReason() ProductApproveReason {
-    return p.approveReason
+	return p.approveReason
 }
 
 func (p *Product) RejectionReason() ProductRejectionReason {
-    return p.rejectionReason
+	return p.rejectionReason
 }

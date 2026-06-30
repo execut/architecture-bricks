@@ -28,6 +28,7 @@ type Product struct {
 	status          ProductStatus
 	approveReason   ProductApproveReason
 	rejectionReason ProductRejectionReason
+	version         int
 }
 
 func NewProduct(id string, userID string, name string) (*Product, error) {
@@ -60,6 +61,10 @@ func (p *Product) ApproveReason() ProductApproveReason {
 
 func (p *Product) RejectionReason() ProductRejectionReason {
 	return p.rejectionReason
+}
+
+func (p *Product) Version() int {
+	return p.version
 }
 
 func (p *Product) Rename(name string) error {
@@ -108,7 +113,15 @@ func (p *Product) AutoApproveIfEligible() bool {
 
 // LoadProduct creates a Product from persisted data without validation.
 // Used by repository to reconstruct domain objects from DB rows.
-func LoadProduct(id, userID, name string, status ProductStatus, approveReason ProductApproveReason, rejectionReason ProductRejectionReason) *Product {
+func LoadProduct(
+	id string,
+	userID string,
+	name string,
+	status ProductStatus,
+	approveReason ProductApproveReason,
+	rejectionReason ProductRejectionReason,
+	version int,
+) *Product {
 	return &Product{
 		id:              id,
 		userID:          userID,
@@ -116,5 +129,6 @@ func LoadProduct(id, userID, name string, status ProductStatus, approveReason Pr
 		status:          status,
 		approveReason:   approveReason,
 		rejectionReason: rejectionReason,
+		version:         version,
 	}
 }

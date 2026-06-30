@@ -10,8 +10,8 @@
 package mocks
 
 import (
+	contract "architecture-bricks/contract"
 	context "context"
-    contract "architecture-bricks/contract"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -42,17 +42,17 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // ApproveProduct mocks base method.
-func (m *MockRepository) ApproveProduct(ctx context.Context, productID, moderatorID string, event contract.ProductHistoryRow) error {
+func (m *MockRepository) ApproveProduct(ctx context.Context, productID, moderatorID string, version int, event contract.ProductHistoryRow) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApproveProduct", ctx, productID, moderatorID, event)
+	ret := m.ctrl.Call(m, "ApproveProduct", ctx, productID, moderatorID, version, event)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ApproveProduct indicates an expected call of ApproveProduct.
-func (mr *MockRepositoryMockRecorder) ApproveProduct(ctx, productID, moderatorID, event any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) ApproveProduct(ctx, productID, moderatorID, version, event any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApproveProduct", reflect.TypeOf((*MockRepository)(nil).ApproveProduct), ctx, productID, moderatorID, event)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApproveProduct", reflect.TypeOf((*MockRepository)(nil).ApproveProduct), ctx, productID, moderatorID, version, event)
 }
 
 // CreateProduct mocks base method.
@@ -75,12 +75,13 @@ func (mr *MockRepositoryMockRecorder) CreateProduct(ctx, product any, events ...
 }
 
 // GetProduct mocks base method.
-func (m *MockRepository) GetProduct(ctx context.Context, productID string) (contract.Product, error) {
+func (m *MockRepository) GetProduct(ctx context.Context, productID string) (contract.Product, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProduct", ctx, productID)
 	ret0, _ := ret[0].(contract.Product)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetProduct indicates an expected call of GetProduct.
@@ -105,23 +106,23 @@ func (mr *MockRepositoryMockRecorder) ProductHistory(ctx, productID any) *gomock
 }
 
 // RejectProduct mocks base method.
-func (m *MockRepository) RejectProduct(ctx context.Context, productID, moderatorID string, event contract.ProductHistoryRow) error {
+func (m *MockRepository) RejectProduct(ctx context.Context, productID, moderatorID string, version int, event contract.ProductHistoryRow) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RejectProduct", ctx, productID, moderatorID, event)
+	ret := m.ctrl.Call(m, "RejectProduct", ctx, productID, moderatorID, version, event)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RejectProduct indicates an expected call of RejectProduct.
-func (mr *MockRepositoryMockRecorder) RejectProduct(ctx, productID, moderatorID, event any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) RejectProduct(ctx, productID, moderatorID, version, event any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectProduct", reflect.TypeOf((*MockRepository)(nil).RejectProduct), ctx, productID, moderatorID, event)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectProduct", reflect.TypeOf((*MockRepository)(nil).RejectProduct), ctx, productID, moderatorID, version, event)
 }
 
 // UpdateProduct mocks base method.
-func (m *MockRepository) UpdateProduct(ctx context.Context, product contract.Product, events ...contract.ProductHistoryRow) error {
+func (m *MockRepository) UpdateProduct(ctx context.Context, product contract.Product, version int, events ...contract.ProductHistoryRow) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, product}
+	varargs := []any{ctx, product, version}
 	for _, a := range events {
 		varargs = append(varargs, a)
 	}
@@ -131,8 +132,8 @@ func (m *MockRepository) UpdateProduct(ctx context.Context, product contract.Pro
 }
 
 // UpdateProduct indicates an expected call of UpdateProduct.
-func (mr *MockRepositoryMockRecorder) UpdateProduct(ctx, product any, events ...any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UpdateProduct(ctx, product, version any, events ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, product}, events...)
+	varargs := append([]any{ctx, product, version}, events...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProduct", reflect.TypeOf((*MockRepository)(nil).UpdateProduct), varargs...)
 }
