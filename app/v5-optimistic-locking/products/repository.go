@@ -7,7 +7,7 @@ import (
     "os"
     "time"
 
-    "architecture-bricks/app/v6-optimistic-locking/products/domain"
+    "architecture-bricks/app/v5-optimistic-locking/products/domain"
     "architecture-bricks/contract"
     biz "architecture-bricks/pkg/optimistic-locking/business-events/value-objects/domain"
     vo "architecture-bricks/pkg/optimistic-locking/value-objects/domain"

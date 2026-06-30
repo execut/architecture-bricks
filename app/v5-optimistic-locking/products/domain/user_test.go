@@ -3,7 +3,7 @@ package domain_test
 import (
     "testing"
 
-    "architecture-bricks/app/v5-value-objects/products/domain"
+    "architecture-bricks/app/v5-optimistic-locking/products/domain"
 
     "github.com/google/uuid"
     "github.com/stretchr/testify/require"

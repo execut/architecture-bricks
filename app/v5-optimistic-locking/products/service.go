@@ -4,7 +4,7 @@ import (
     "context"
     "errors"
 
-    "architecture-bricks/app/v5-value-objects/products/domain"
+    "architecture-bricks/app/v5-optimistic-locking/products/domain"
     "architecture-bricks/contract"
 )
 
@@ -46,7 +46,12 @@ func (s *Service) ApproveProduct(ctx context.Context, params contract.ApprovePro
 
     product.Approve(moderator)
 
-    return s.repo.Save(ctx, product)
+    err = s.repo.Save(ctx, product)
+    if errors.Is(err, contract.ErrProductAlreadyChanged) {
+        return contract.ErrProductAlreadyChanged
+    }
+
+    return err
 }
 
 func (s *Service) RejectProduct(ctx context.Context, params contract.RejectProduct) error {
@@ -72,7 +77,12 @@ func (s *Service) RejectProduct(ctx context.Context, params contract.RejectProdu
 
     product.Reject(moderator)
 
-    return s.repo.Save(ctx, product)
+    err = s.repo.Save(ctx, product)
+    if errors.Is(err, contract.ErrProductAlreadyChanged) {
+        return contract.ErrProductAlreadyChanged
+    }
+
+    return err
 }
 
 func (s *Service) CreateProduct(ctx context.Context, params contract.CreateProduct) error {
@@ -103,6 +113,10 @@ func (s *Service) CreateProduct(ctx context.Context, params contract.CreateProdu
     err = s.repo.Save(ctx, product)
     if errors.Is(err, domain.ErrProductAlreadyExists) {
         return contract.ErrProductAlreadyExists
+    }
+
+    if errors.Is(err, contract.ErrProductAlreadyChanged) {
+        return contract.ErrProductAlreadyChanged
     }
 
     return err
@@ -141,7 +155,12 @@ func (s *Service) UpdateProduct(ctx context.Context, params contract.UpdateProdu
         return err
     }
 
-    return s.repo.Save(ctx, product)
+    err = s.repo.Save(ctx, product)
+    if errors.Is(err, contract.ErrProductAlreadyChanged) {
+        return contract.ErrProductAlreadyChanged
+    }
+
+    return err
 }
 
 func (s *Service) GetProduct(ctx context.Context, params contract.GetProduct) (contract.Product, error) {

@@ -9,8 +9,7 @@ import (
     v2 "architecture-bricks/app/v2-repository/products"
     v3 "architecture-bricks/app/v3-domain-driven-design-light/products"
     v4 "architecture-bricks/app/v4-domain-driven-design-light-with-events/products"
-    v5 "architecture-bricks/app/v5-value-objects/products"
-    v6 "architecture-bricks/app/v6-optimistic-locking/products"
+    v5 "architecture-bricks/app/v5-optimistic-locking/products"
     "architecture-bricks/contract"
 )
 
@@ -18,8 +17,7 @@ const VariantV1ScenarioOfTransaction = "v1_scenario_of_transaction"
 const VariantV2Repository = "v2_repository"
 const VariantV3DomainDrivenDesignLight = "v3_domain_driven_design_light"
 const VariantV4DomainDrivenDesignLightWithEvents = "v4_domain_driven_design_light_with_events"
-const VariantV5ValueObjects = "v5_value_objects"
-const VariantV6OptimisticLocking = "v6_optimistic_locking"
+const VariantV5OptimisticLocking = "v5_optimistic_locking"
 
 func NewApplication(ctx context.Context) (contract.Application, error) {
     return NewApplicationByVariant(ctx, os.Getenv("APP_VARIANT"))
@@ -44,10 +42,8 @@ func NewApplicationByVariant(ctx context.Context, variant string) (contract.Appl
         return v3.NewService(ctx)
     case VariantV4DomainDrivenDesignLightWithEvents:
         return v4.NewService(ctx)
-    case VariantV5ValueObjects:
+    case VariantV5OptimisticLocking:
         return v5.NewService(ctx)
-    case VariantV6OptimisticLocking:
-        return v6.NewService(ctx)
     default:
         return nil, fmt.Errorf("unknown APP_VARIANT %q", variant)
     }

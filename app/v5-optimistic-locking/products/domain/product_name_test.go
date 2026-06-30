@@ -3,7 +3,7 @@ package domain_test
 import (
     "testing"
 
-    "architecture-bricks/app/v6-optimistic-locking/products/domain"
+    "architecture-bricks/app/v5-optimistic-locking/products/domain"
 
     "github.com/stretchr/testify/require"
 )

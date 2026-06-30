@@ -3,8 +3,8 @@ package domain_test
 import (
     "testing"
 
-    "architecture-bricks/app/v6-optimistic-locking/products/domain"
-    "architecture-bricks/app/v6-optimistic-locking/products/tests_common"
+    "architecture-bricks/app/v5-optimistic-locking/products/domain"
+    "architecture-bricks/app/v5-optimistic-locking/products/tests_common"
     biz "architecture-bricks/pkg/optimistic-locking/business-events/value-objects/domain"
     vo "architecture-bricks/pkg/optimistic-locking/value-objects/domain"
 
