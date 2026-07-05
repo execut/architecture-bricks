@@ -3,6 +3,10 @@ package integration
 import (
 	"context"
 	"os"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,12 +23,32 @@ const (
 	TestProductNameDog = "Собака"
 )
 
-var TestApplicationVariants = []string{
-	app.VariantV1ScenarioOfTransaction,
-	app.VariantV2Repository,
-	app.VariantV3DomainDrivenDesignLight,
-	app.VariantV4DomainDrivenDesignLightWithEvents,
-	app.VariantV5ValueObjects,
+var TestApplicationVariants = testApplicationVariants()
+
+func testApplicationVariants() []string {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("cannot detect test application variants: caller is unknown")
+	}
+
+	appDir := filepath.Join(filepath.Dir(filename), "..", "..", "app")
+	entries, err := os.ReadDir(appDir)
+	if err != nil {
+		panic(err)
+	}
+
+	variants := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() || !strings.HasPrefix(entry.Name(), "v") {
+			continue
+		}
+
+		variants = append(variants, strings.ReplaceAll(entry.Name(), "-", "_"))
+	}
+
+	sort.Strings(variants)
+
+	return variants
 }
 
 func TestApplicationVariantList(t testing.TB) []string {
